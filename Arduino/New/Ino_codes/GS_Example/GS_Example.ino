@@ -46,8 +46,6 @@
 
 
 
-// Library Defines
-#include <Arduino.h>
 
 
 //Servo Control Defines
@@ -62,7 +60,8 @@
 int32_t xSteps = 0;
 int32_t ySteps = 0;
 
-enum ControlMode { MANUAL, AUTO };
+enum ControlMode { MANUAL,
+                   AUTO };
 ControlMode controlMode = MANUAL;
 
 //Lever defines
@@ -99,7 +98,7 @@ const int joystickYPin = A1;
 
 // Joystick settings
 //const int centerThreshold = 100;  // Deadzone threshold around center position
-const long maxSpeed = 20000000;   // Max speed for the motor in steps per second (adjust as necessary)
+const long maxSpeed = 20000000;  // Max speed for the motor in steps per second (adjust as necessary)
 
 // Servo Commands defines
 // Sends a "Reset command timeout" command to both Tic controllers
@@ -126,7 +125,7 @@ void waitForPosition(TicI2C &ticController, int32_t targetPosition) {
 // Convert the angle to steps and set the target position for the specified motor
 void setMotorPosition(char motor, float angle) {
   int32_t steps = round((angle * stepsPerRevolution) / 360);  // Convert angle to steps
-                                                       // Note that the following sets a new zero point after each movemement for testing purposes. In future, use calibration message to set zero and move from there.
+                                                              // Note that the following sets a new zero point after each movemement for testing purposes. In future, use calibration message to set zero and move from there.
   if (motor == 'X') {
     tic1.setTargetPosition(steps);  // Move tic1 (X motor) to the calculated position
   } else if (motor == 'Y') {
@@ -158,7 +157,7 @@ void controlVelocityWithJoystick() {
   // Set motor speeds
   tic1.setTargetVelocity(speedX);
   tic2.setTargetVelocity(speedY);
-/*
+  /*
   Serial.print("Joystick X velocity: ");
   Serial.print(speedX);
   Serial.println(" steps/s");
@@ -201,25 +200,39 @@ void setup() {
   Serial.println(F("zero pin started"));
   pinMode(debugPin, INPUT_PULLUP);
   Serial.println(F("debug pin started"));
-  controlMode= MANUAL;
+  controlMode = MANUAL;
   Serial.println("GOT");
 }
 
+int angley = 0;
+int anglex = 0;
 
 void loop() {
-  // Control With joystick 
+  // Control With joystick
   // controlVelocityWithJoystick();
 
-// Change the angle to go to will run every time
- int angley = 20;
- int anglex = 20;
- //Make angles into stepper "steps"
+   if (Serial.available() > 0) {
+    Serial.println("type a number");
+    int stepsx = Serial.parseInt(); 
+        Serial.println("type a number");
+    int stepsy = Serial.parseInt(); 
+   }
+  // Change the angle to go to will run every time
+
+  //Make angles into stepper "steps"
   int32_t stepsx = round((anglex * stepsPerRevolution) / 360);
   int32_t stepsy = round((angley * stepsPerRevolution) / 360);
   // Control with steps
+  
     tic1.setTargetPosition(stepsx);
     tic2.setTargetPosition(stepsy);
+    angley = 0;
+    anglex = 0;
+  }
+
+  
+
   // Delay
-  delay(10);
+  delay(1000);
   resetCommandTimeout();  // Reset command timeout to avoid Tic shutdown needs to go last
 }
