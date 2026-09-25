@@ -31,7 +31,7 @@ Ground station files for the ERAU ASCEND! team.
 
 ## Getting Started
 
-/[ASCEND_Ground_Station_Instructions.md](https://github.com/AscendERAU1/ASCEND-GS/blob/ascend-main/Arduino/New/ASCEND_Ground_Station_Instructions.md)
+[ASCEND_Ground_Station_Instructions.md](https://github.com/AscendERAU1/ASCEND-GS/blob/ascend-main/Arduino/New/ASCEND_Ground_Station_Instructions.md)
 
 ## Contributing
 
