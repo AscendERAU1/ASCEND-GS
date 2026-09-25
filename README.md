@@ -31,7 +31,7 @@ Ground station files for the ERAU ASCEND! team.
 
 ## Getting Started
 
-*(Add setup/build/flash instructions once available — e.g. Arduino IDE version, board, required libraries, COM port setup, how to run the ground station software.)*
+/[ASCEND_Ground_Station_Instructions.md](https://github.com/AscendERAU1/ASCEND-GS/blob/ascend-main/Arduino/New/ASCEND_Ground_Station_Instructions.md)
 
 ## Contributing
 
