@@ -49,43 +49,15 @@
 // Library Defines
 #include <Arduino.h>
 
-//Azimuth Range defines
-#include <math.h>
-#include "AzimuthFull.h"
 
 //Servo Control Defines
 #include <Wire.h>
 #include <Tic.h>
 
-// Defines for GPS Parsing
-
-/* NOT USED CURRENTLY need to parse time and date to use
-typedef struct {
-  double altitude;
-  double latitude;
-  double longitude;
-  double date; 
-  double time;
-  bool valid;
-} GPSData;
-*/
-
 
 #define LIGHT 12
 #define BUFFER_SIZE 350
 
-// Struct for parsing
-typedef struct {
-  float altitude;
-  float latitude;
-  float longitude;
-  bool valid;
-} GPSData;
-
-float x_value, y_value, previous_y = 0.0, previous_x = 0.0;
-
-char buffer[BUFFER_SIZE];
-uint8_t bufIndex = 0;
 
 int32_t xSteps = 0;
 int32_t ySteps = 0;
@@ -93,9 +65,8 @@ int32_t ySteps = 0;
 enum ControlMode { MANUAL, AUTO };
 ControlMode controlMode = MANUAL;
 
-  //Lever defines
-
-  // Lever pins
+//Lever defines
+// Lever pins
 const int joyLeverPin = 7;
 const int zeroLeverPin = 8;
 const int debugPin = 4;
@@ -104,53 +75,8 @@ const int debugPin = 4;
 bool joylever = false;
 bool zerolever = false;
 static bool lastZeroLever = false;
-//debug defines
-float promptalt, promptlong, promptlat;
-
-bool readSerialMessage() {
-  while (Serial.available()) {
-    char c = Serial.read();
-
-    // Prevent buffer overflow
-    if (bufIndex < BUFFER_SIZE - 1) {
-      buffer[bufIndex++] = c;
-      buffer[bufIndex] = '\0';
-    }
-
-    // End of message detected
-    if (strstr(buffer, "CRC:") != NULL) {
-      Serial.println("u");
-
-      return true;  // buffer now contains full message
-    }
-  }
-  return false;  // no complete message yet
-}
 
 
-/* ---------- GPS PARSER ---------- */
-GPSData extractGPS(const char *msg) {
-  GPSData gps = { 0, 0, 0, false };
-
-  /*//Checking for bad input
-  if (strstr(msg, "CRC_ERR") != NULL) {
-    Serial.print("Invalid");
-    return gps;  // invalid packet → terminate immediately
-  }*/
-
-  const char *altPtr = strstr(msg, " Alt ");
-  const char *latPtr = strstr(msg, " lt ");
-  const char *lonPtr = strstr(msg, " ln ");
-
-  if (!altPtr || !latPtr || !lonPtr) return gps;
-
-  gps.altitude = atof(altPtr + 4);
-  gps.latitude = atof(latPtr + 3);
-  gps.longitude = atof(lonPtr + 3);
-
-  gps.valid = true;
-  return gps;
-}
 
 //Servo control
 // Defines
@@ -182,13 +108,6 @@ void resetCommandTimeout() {
   tic2.resetCommandTimeout();
 }
 
-void SetZeroPosition() {
-  tic1.haltAndSetPosition(0);  // Set current position of tic1 to 0
-  tic2.haltAndSetPosition(0);  // Set current position of tic1 to 0
-  tic1.exitSafeStart();
-  tic2.exitSafeStart();
-}
-
 // Delays while resetting command timeout to avoid interruption
 void delayWhileResettingCommandTimeout(uint32_t ms) {
   uint32_t start = millis();
@@ -211,7 +130,7 @@ void setMotorPosition(char motor, float angle) {
   if (motor == 'X') {
     tic1.setTargetPosition(steps);  // Move tic1 (X motor) to the calculated position
   } else if (motor == 'Y') {
-    tic2.setTargetPosition(steps);  // Move tic2 (Y motor) to the calculated position
+    tic2.setTargetPosition(steps);  // Move tic1 (X motor) to the calculated position
   }
 }
 
@@ -252,18 +171,10 @@ void controlVelocityWithJoystick() {
 }
 
 
+
 bool joyleverCheck() {
   return digitalRead(joyLeverPin) == LOW;  // flipped = LOW
 }
-
-bool zeroleverCheck() {
-  return digitalRead(zeroLeverPin) == LOW;  // flipped = LOW
-}
-
-bool debugpincheck(){
-  return digitalRead(debugPin) == LOW; // flipped = low
-}
-
 
 void setup() {
   Serial.begin(115200);
@@ -290,104 +201,25 @@ void setup() {
   Serial.println(F("zero pin started"));
   pinMode(debugPin, INPUT_PULLUP);
   Serial.println(F("debug pin started"));
+  controlMode= MANUAL;
+  Serial.println("GOT");
 }
 
-/* If ram is a problem here is a ram monitor
-
-extern int __heap_start, *__brkval;
-int freeRam() {
-  int v;
-  return (int)&v - (__brkval == 0 ? (int)&__heap_start : (int)__brkval);
-}
-
-//How to call
-Serial.print(F("Free RAM: "));
-Serial.println(freeRam());
-
-*/
 
 void loop() {
+  // Control With joystick 
+  // controlVelocityWithJoystick();
 
-  static GPSData gps;
-  static AzimuthResult output;
-
-  // Scanning Serial
-  if (readSerialMessage()) {
-    Serial.println("Received:");
-    Serial.println(buffer);
-
-    //Parsing GPS Data
-    gps = extractGPS(buffer);
-
-    // Clear buffer for next message
-    bufIndex = 0;
-    buffer[0] = '\0';
-  }
-
-
-  // ALL FUNCTIONS FOR WHEN GPS HAS BEEN CALLED
-  // Includes:
-  // Gps parsing, Azimuth Range
-  if (gps.valid && ((gps.latitude != previous_x) || (gps.longitude != previous_y))) {
-
-    Serial.println("GPS DATA FOUND");
-    Serial.print("Altitude: ");
-    /*IF RAM IS A PROBLEM 
-    Serial.println(F("Your message (this will work with print normal and the vars)"))
-    */
-    Serial.println(gps.altitude);
-    Serial.print("Latitude: ");
-    Serial.println(gps.latitude, 6);
-    Serial.print("Longitude: ");
-    Serial.println(gps.longitude, 6);
-
-    //Blink Light
-    digitalWrite(LIGHT, HIGH);
-    digitalWrite(LIGHT, LOW);
-
-    float coordinate1[2] = { 34.614716, -112.450387 };  // Given Coords
-    float coordinate2[2] = { gps.latitude, gps.longitude };
-    float altitude1 = 4500.0;  //given altitude
-    float altitude2 = gps.altitude;
-
-    // Run Function to calculate it
-    output = azmuth_Range(coordinate1, coordinate2, altitude1, altitude2);
-
-    // Sets x_value and y_value
-    x_value = -(output.ForwardAzimuth);
-    y_value = (output.ElevationAngle);
-
-    previous_y = gps.longitude;
-    previous_x = gps.latitude;
-
-  }  // end of gps valid if
-
-  // checking states of lever
-  joylever = joyleverCheck();
-  zerolever = zeroleverCheck();
-
-  if (joylever && controlMode== AUTO){
-    controlMode= MANUAL;
-  }
-
-  //checking zero lever state
-  if (zerolever && !lastZeroLever) {
-    SetZeroPosition();
-    controlMode = AUTO;
-  }
-
-  lastZeroLever=zerolever;
-
-  if (controlMode== MANUAL && joylever){
-    controlVelocityWithJoystick();
-  }
-
-  if (controlMode== AUTO && gps.valid) {
-
-    setMotorPosition('X', x_value);  // Move X motor
-    setMotorPosition('Y', -y_value);  // Move Y motor
-
-  }
-
+// Change the angle to go to will run every time
+ int angley = 20;
+ int anglex = 20;
+ //Make angles into stepper "steps"
+  int32_t stepsx = round((anglex * stepsPerRevolution) / 360);
+  int32_t stepsy = round((angley * stepsPerRevolution) / 360);
+  // Control with steps
+    tic1.setTargetPosition(stepsx);
+    tic2.setTargetPosition(stepsy);
+  // Delay
+  delay(10);
   resetCommandTimeout();  // Reset command timeout to avoid Tic shutdown needs to go last
 }
