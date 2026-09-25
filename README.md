@@ -11,7 +11,7 @@ Ground station files for the ERAU ASCEND! team.
 | Ground Station Mini | 🛠 In progress | Actively being edited |
 | Arduino (New) | ✅ Current | Actively worked on |
 | Python | ⚠️ Deprecated | Superseded by the Arduino implementation |
-| Archive | — | Empty — nothing archived yet |
+
 
 ## Overview
 
