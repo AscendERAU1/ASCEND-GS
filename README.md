@@ -11,11 +11,11 @@ Ground station files for the ERAU ASCEND! team.
 | Ground Station Mini | 🛠 In progress | Actively being edited |
 | Arduino (New) | ✅ Current | Actively worked on |
 | Python | ⚠️ Deprecated | Superseded by the Arduino implementation |
-| Archive | — | Empty — nothing archived yet |
+
 
 ## Overview
 
-*(Add 2–3 sentences here: what the ground station does — e.g. receives/decodes telemetry from the rocket/payload, displays live data, logs to file, etc.)*
+Tracks the payload on the weather balloon with GPS coordinates and is able to accurately set azimuth and elevation to track. Receives data from the payload while in the air. Runs entirely off of [ASCEND_Ground_Station.ino](https://github.com/AscendERAU1/ASCEND-GS/blob/ascend-main/Arduino/New/Ino_codes/Arduino_Ground_Station/Arduino_Ground_Station.ino) and [AzimuthFull.h](https://github.com/AscendERAU1/ASCEND-GS/blob/ascend-main/Arduino/New/Ino_codes/Arduino_Ground_Station/AzimuthFull.h) respectively providing: code to move the ground station, code to calculate where the payload is in relation to the ground station and where to aim at.
 
 ## Repository Structure
 
@@ -31,7 +31,7 @@ Ground station files for the ERAU ASCEND! team.
 
 ## Getting Started
 
-*(Add setup/build/flash instructions once available — e.g. Arduino IDE version, board, required libraries, COM port setup, how to run the ground station software.)*
+[ASCEND_Ground_Station_Instructions.md](https://github.com/AscendERAU1/ASCEND-GS/blob/ascend-main/Arduino/New/ASCEND_Ground_Station_Instructions.md)
 
 ## Contributing
 
