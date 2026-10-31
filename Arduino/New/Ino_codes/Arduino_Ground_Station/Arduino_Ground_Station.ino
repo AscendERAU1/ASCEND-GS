@@ -28,7 +28,7 @@
 // Example Message*(Explained)
 // @ GPS_STAT 202 0000 00 00 00:17:06.570 CRC_OK  TRK GPSTrk05169 Alt 000000 lt +00.00000 ln +00.00000 Vel +0000 +000 +0000 Fix 0 #  0  0  0  0 000_00_00 000_00_00 000_00_00 000_00_00 000_00_00 CRC: 5F95
 // Start message //Placeholder //Time     //CRC check not corrupt           //Latitude   //Longitude //Velocity           //GPS Fix type      //Additional raw satellite or time data (format placeholder)
-//Length of message                 //ID of Tracker  //Altitude                                                     //Sat tracking info                                       //Check for packet
+//Length of message                 //ID of Tracker             //Altitude                                                     //Sat tracking info                                       //Check for packet
 //IMPORTANT ONES:                                                                                 || The rest is unneeded
 // @ GPS_STAT                  :TIME                              ALT        LT           LN                                                                            (END POINT DELIMINATOR)   CRC: 
 // Checking for serial will be used for featherweight
@@ -37,7 +37,7 @@
 // 
 // Azmuth_range: Calculates the distance and the altitude.
 //
-// Takes in a coorinate1, coordinate2, altitude1 and altitude2 to get the said calculated values 
+// Takes in a coordinate1, coordinate2, altitude1 and altitude2 to get the said calculated values 
 //
 // Coord1 and coord2 is formatted: Lat, Long
 
@@ -96,9 +96,9 @@ ControlMode controlMode = MANUAL;
   //Lever defines
 
   // Lever pins
-const int joyLeverPin = 7;
-const int zeroLeverPin = 8;
-const int debugPin = 4;
+const int joyLeverPin = 4;
+const int zeroLeverPin = 5;
+const int debugPin = 3;
 
 // Lever states
 bool joylever = false;
@@ -119,7 +119,6 @@ bool readSerialMessage() {
 
     // End of message detected
     if (strstr(buffer, "CRC:") != NULL) {
-      Serial.println("u");
 
       return true;  // buffer now contains full message
     }

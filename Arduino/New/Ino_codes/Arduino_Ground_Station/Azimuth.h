@@ -1,7 +1,7 @@
 /* Azimuth.h
 //
 //
-// CURRENTLY UNUSED PLEASE REFER TO AZIMUTH FULL WHITCH IS USED
+// CURRENTLY UNUSED PLEASE REFER TO AZIMUTH FULL WHICH IS USED
 //
 //
 // Used for decleration of the azimuth struct and function
