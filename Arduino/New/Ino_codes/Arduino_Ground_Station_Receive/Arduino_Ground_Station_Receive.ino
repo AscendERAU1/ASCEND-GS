@@ -81,7 +81,7 @@ typedef struct {
 
 
 #define LIGHT 12
-#define BUFFER_SIZE 350
+#define BUFFER_SIZE 100
 
 // Struct for parsing
 typedef struct {
@@ -93,7 +93,7 @@ typedef struct {
 
 float x_value, y_value, previous_y = 0.0, previous_x = 0.0;
 
-char buffer;
+char buffer[BUFFER_SIZE];
 uint8_t bufIndex = 0;
 
 int32_t xSteps = 0;
@@ -115,39 +115,20 @@ bool zerolever = false;
 static bool lastZeroLever = false;
 //debug defines
 float promptalt, promptlong, promptlat;
-/*
-bool readSerialMessage() {
-  while (Serial.available()) {
-    char c = Serial.read();
 
-    // Prevent buffer overflow
-    if (bufIndex < BUFFER_SIZE - 1) {
-      buffer[bufIndex++] = c;
-      buffer[bufIndex] = '\0';
-    }
-
-    // End of message detected
-    if (strstr(buffer, "CRC:") != NULL) {
-
-      return true;  // buffer now contains full message
-    }
-  }
-  return false;  // no complete message yet
-}
-*/
-/*
-bool readSerialMessage() {
+// Reading LoRa message
+bool readLoRaMessage() {
   int packetSize = LoRa.parsePacket();
-    if (packetSize) {
-      for (int i = 0; i < packetSize; i++) {
-        buffer += (char)LoRa.read();
-      } 
-      return true;
-
+  if (packetSize) {
+    bufIndex = 0;
+    while (LoRa.available() && bufIndex < sizeof(buffer) - 1) {
+      buffer[bufIndex++] = (char)LoRa.read();
     }
+    buffer[bufIndex] = '\0';
+    return true;
+  }
   return false;
 }
-*/
 
 /* ---------- GPS PARSER ---------- */
 GPSData extractGPS(const char *msg) {
@@ -351,25 +332,15 @@ void loop() {
   static GPSData gps;
   static AzimuthResult output;
 
-  //if(readSerialMessage()){ 
 
-      int packetSize = LoRa.parsePacket();
-    if (packetSize) {
-      for (int i = 0; i < packetSize; i++) {
-        buffer += (char)LoRa.read();
-      } 
-
-    }
+  if(readLoRaMessage()){ 
     //Parsing GPS Data
     Serial.println("Read:");
     Serial.println(buffer);
     
     gps = extractGPS(buffer);
-
-    // Clear buffer for next message
-    bufIndex = 0;
-    buffer = '\0';
- // }
+    // readLoRaMessage clears the buffer for you already
+  }
 
 
   // ALL FUNCTIONS FOR WHEN GPS HAS BEEN CALLED
@@ -392,6 +363,8 @@ void loop() {
     digitalWrite(LIGHT, HIGH);
     digitalWrite(LIGHT, LOW);
 
+
+    // Replace with internal GPS for coord1
     float coordinate1[2] = { 34.614716, -112.450387 };  // Given Coords
     float coordinate2[2] = { gps.latitude, gps.longitude };
     float altitude1 = 4500.0;  //given altitude
