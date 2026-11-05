@@ -38,13 +38,14 @@ void setup() {
 void loop() {
 
   // Getting the sending buffer for payload gps to send over LoRa
+  
   String strBuffer = "lt 34.5915 ln -112.3593 Alt 10000" ;
   char sendBuffer[100];
   strBuffer.toCharArray(sendBuffer, 100);
 
   // Start sending packet
   LoRa.beginPacket();
-  LoRa.print("GPS Packet:");
+  LoRa.print("GPS Packet: ");
   LoRa.print(sendBuffer);
   LoRa.endPacket();
   Serial.println(sendBuffer);

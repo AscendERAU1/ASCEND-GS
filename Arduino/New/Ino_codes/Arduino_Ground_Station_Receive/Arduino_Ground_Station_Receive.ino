@@ -132,6 +132,7 @@ bool readLoRaMessage() {
 
 /* ---------- GPS PARSER ---------- */
 GPSData extractGPS(const char *msg) {
+  
   GPSData gps = { 0, 0, 0, false };
 
   /*//Checking for bad input
@@ -339,6 +340,7 @@ void loop() {
     Serial.println(buffer);
     
     gps = extractGPS(buffer);
+    
     // readLoRaMessage clears the buffer for you already
   }
 
