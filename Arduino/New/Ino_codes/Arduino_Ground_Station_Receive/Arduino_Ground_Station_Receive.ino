@@ -367,6 +367,7 @@ void loop() {
 
 
     // Replace with internal GPS for coord1
+    // Change this NOW
     float coordinate1[2] = { 34.614716, -112.450387 };  // Given Coords
     float coordinate2[2] = { gps.latitude, gps.longitude };
     float altitude1 = 4500.0;  //given altitude
