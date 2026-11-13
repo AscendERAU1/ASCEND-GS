@@ -57,6 +57,15 @@
 #include <Wire.h>
 #include <Tic.h>
 
+
+// Radio Librarys
+#include <SPI.h>
+#include <LoRa.h>
+
+// Define pins used by the RFM95 module
+#define ss 10
+#define rst 5
+#define dio0 2
 // Defines for GPS Parsing
 
 /* NOT USED CURRENTLY need to parse time and date to use
@@ -72,7 +81,7 @@ typedef struct {
 
 
 #define LIGHT 12
-#define BUFFER_SIZE 350
+#define BUFFER_SIZE 100
 
 // Struct for parsing
 typedef struct {
@@ -97,8 +106,8 @@ ControlMode controlMode = MANUAL;
 
   // Lever pins
 const int joyLeverPin = 4;
-const int zeroLeverPin = 5;
-const int debugPin = 3;
+const int zeroLeverPin = 3;
+//const int debugPin = 3;
 
 // Lever states
 bool joylever = false;
@@ -107,28 +116,23 @@ static bool lastZeroLever = false;
 //debug defines
 float promptalt, promptlong, promptlat;
 
-bool readSerialMessage() {
-  while (Serial.available()) {
-    char c = Serial.read();
-
-    // Prevent buffer overflow
-    if (bufIndex < BUFFER_SIZE - 1) {
-      buffer[bufIndex++] = c;
-      buffer[bufIndex] = '\0';
+// Reading LoRa message
+bool readLoRaMessage() {
+  int packetSize = LoRa.parsePacket();
+  if (packetSize) {
+    bufIndex = 0;
+    while (LoRa.available() && bufIndex < sizeof(buffer) - 1) {
+      buffer[bufIndex++] = (char)LoRa.read();
     }
-
-    // End of message detected
-    if (strstr(buffer, "CRC:") != NULL) {
-
-      return true;  // buffer now contains full message
-    }
+    buffer[bufIndex] = '\0';
+    return true;
   }
-  return false;  // no complete message yet
+  return false;
 }
-
 
 /* ---------- GPS PARSER ---------- */
 GPSData extractGPS(const char *msg) {
+  
   GPSData gps = { 0, 0, 0, false };
 
   /*//Checking for bad input
@@ -259,10 +263,11 @@ bool zeroleverCheck() {
   return digitalRead(zeroLeverPin) == LOW;  // flipped = LOW
 }
 
+/*
 bool debugpincheck(){
   return digitalRead(debugPin) == LOW; // flipped = low
 }
-
+*/
 
 void setup() {
   Serial.begin(115200);
@@ -287,8 +292,26 @@ void setup() {
   Serial.println(F("joy pin started"));
   pinMode(zeroLeverPin, INPUT_PULLUP);
   Serial.println(F("zero pin started"));
+  /*
   pinMode(debugPin, INPUT_PULLUP);
   Serial.println(F("debug pin started"));
+  */
+  
+  // Radio Defines
+
+  Serial.println("LoRa Receiver");
+
+  LoRa.setPins(ss, rst, dio0);
+
+  if (!LoRa.begin(915E6)) {
+    Serial.println("Starting LoRa failed!");
+    while (1);
+  }
+
+  LoRa.setSyncWord(0xF3);   // must match the transmitter
+  LoRa.enableCrc();         // drop corrupted packets
+
+  Serial.println("LoRa Receiver Ready!");
 }
 
 /* If ram is a problem here is a ram monitor
@@ -310,17 +333,15 @@ void loop() {
   static GPSData gps;
   static AzimuthResult output;
 
-  // Scanning Serial
-  if (readSerialMessage()) {
-    Serial.println("Received:");
-    Serial.println(buffer);
 
+  if(readLoRaMessage()){ 
     //Parsing GPS Data
+    Serial.println("Read:");
+    Serial.println(buffer);
+    
     gps = extractGPS(buffer);
-
-    // Clear buffer for next message
-    bufIndex = 0;
-    buffer[0] = '\0';
+    
+    // readLoRaMessage clears the buffer for you already
   }
 
 
@@ -344,6 +365,9 @@ void loop() {
     digitalWrite(LIGHT, HIGH);
     digitalWrite(LIGHT, LOW);
 
+
+    // Replace with internal GPS for coord1
+    // Change this NOW
     float coordinate1[2] = { 34.614716, -112.450387 };  // Given Coords
     float coordinate2[2] = { gps.latitude, gps.longitude };
     float altitude1 = 4500.0;  //given altitude
@@ -372,6 +396,8 @@ void loop() {
   //checking zero lever state
   if (zerolever && !lastZeroLever) {
     SetZeroPosition();
+    Serial.println("Zero, Auto starting");
+
     controlMode = AUTO;
   }
 
@@ -379,6 +405,7 @@ void loop() {
 
   if (controlMode== MANUAL && joylever){
     controlVelocityWithJoystick();
+    Serial.println("Joy");
   }
 
   if (controlMode== AUTO && gps.valid) {

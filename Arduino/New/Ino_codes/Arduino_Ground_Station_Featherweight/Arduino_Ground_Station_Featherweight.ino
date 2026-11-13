@@ -107,6 +107,25 @@ static bool lastZeroLever = false;
 //debug defines
 float promptalt, promptlong, promptlat;
 
+bool readSerialMessage() {
+  while (Serial.available()) {
+    char c = Serial.read();
+
+    // Prevent buffer overflow
+    if (bufIndex < BUFFER_SIZE - 1) {
+      buffer[bufIndex++] = c;
+      buffer[bufIndex] = '\0';
+    }
+
+    // End of message detected
+    if (strstr(buffer, "CRC:") != NULL) {
+
+      return true;  // buffer now contains full message
+    }
+  }
+  return false;  // no complete message yet
+}
+
 
 /* ---------- GPS PARSER ---------- */
 GPSData extractGPS(const char *msg) {
@@ -291,19 +310,19 @@ void loop() {
   static GPSData gps;
   static AzimuthResult output;
 
-  String data = "";
-  int packetSize = LoRa.parsePacket();
-  if (packetSize) {
-    for (int i = 0; i < packetSize; i++) {
-      data += (char)LoRa.read();
-    }
-    Serial.print("Received packet: ");
-    Serial.print(data);
-    Serial.print(" | RSSI: ");
-    Serial.println(LoRa.packetRssi());
+  // Scanning Serial
+  if (readSerialMessage()) {
+    Serial.println("Received:");
+    Serial.println(buffer);
+
+    //Parsing GPS Data
+    gps = extractGPS(buffer);
+
+    // Clear buffer for next message
+    bufIndex = 0;
+    buffer[0] = '\0';
   }
 
-  gps = extractGPS(data);
 
   // ALL FUNCTIONS FOR WHEN GPS HAS BEEN CALLED
   // Includes:
