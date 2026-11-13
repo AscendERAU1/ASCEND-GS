@@ -309,7 +309,7 @@ void setup() {
   }
 
   LoRa.setSyncWord(0xF3);   // must match the transmitter
-  LoRa.enableCrc();         // NEW: drop corrupted packets
+  LoRa.enableCrc();         // drop corrupted packets
 
   Serial.println("LoRa Receiver Ready!");
 }
