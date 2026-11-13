@@ -10,9 +10,15 @@
 
 
 // Buffer defines
-#define NUM_SLOTS 6
+#define NUM_SLOTS 5
 #define SLOT_SIZE 256
 
+/* Debug
+volatile uint16_t rxCount = 0;
+volatile uint16_t lastLen = 0;
+*/
+
+// Takes
 char slots[NUM_SLOTS][SLOT_SIZE]; // Used for each of the 4 packets we end up receiving
 
 volatile uint8_t head = 0;   // next slot the callback will fill
@@ -23,6 +29,11 @@ volatile uint16_t overruns = 0;
 // Receive interupt
 
 void onReceive() {
+
+//  Debug
+//  rxCount++;
+//  lastLen = LoRa.available();    // bytes waiting for this packet
+
     uint8_t next = (head + 1) % NUM_SLOTS;
     if (next == tail) {            // all slots full, drop this packet
         overruns++;
@@ -36,6 +47,20 @@ void onReceive() {
     }
     slots[head][i] = '\0';
     head = next;                  
+}
+
+
+void packetConsumer(char *msg){
+    char* save = nullptr;
+
+
+    char* tok = strtok_r(msg, ",", &save);   // first call: pass the buffer
+
+    while (tok != NULL) {
+      Serial.println(tok);     
+      tok = strtok_r(NULL, ",", &save);
+    }
+
 }
 
 
@@ -65,21 +90,17 @@ void setup() {
 
 
 
-void packetConsumer(char *msg){
-    char* save = nullptr;
-
-
-    char* tok = strtok_r(msg, ",", &save);   // first call: pass the buffer
-
-    while (tok != NULL) {
-
-      tok = strtok_r(NULL, ",", &save);
-    }
-
-}
 
 void loop(){
-
+  /* Debug 
+  static unsigned long t = 0;
+  if (millis() - t > 2000) {
+    t = millis();
+    Serial.print("rx="); Serial.print(rxCount);
+    Serial.print(" over="); Serial.print(overruns);
+    Serial.print(" len="); Serial.println(lastLen);
+  }
+  */
   while (tail != head) {
     char *msg = slots[tail];
 

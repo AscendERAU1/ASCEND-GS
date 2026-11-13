@@ -352,7 +352,7 @@ void loop() {
 
     Serial.println("GPS DATA FOUND");
     Serial.print("Altitude: ");
-    /*IF RAM IS A PROBLEM 
+    /*IF RAM IS A PROBLEM [SUCCESS] Took 10.28 seconds 
     Serial.println(F("Your message (this will work with print normal and the vars)"))
     */
     Serial.println(gps.altitude);
